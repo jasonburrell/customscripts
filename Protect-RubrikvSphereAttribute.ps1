@@ -5,7 +5,7 @@ This PowerShell script will protect a VM based on it's attribute in vSphere and 
 .DESCRIPTION
 
 .EXAMPLE
--vCenter sand1-vcsa.rubrikdemo.com -rubrikNode sand1-rbk01.rubrikdemo.com -creds .\rubrikCred.xml
+.\Protect-RubrikvSphereAttribute.ps1 -vCenter sand1-vcsa.rubrikdemo.com -rubrikNode sand1-rbk01.rubrikdemo.com -creds .\rubrikCred.xml
 
 .NOTES
 Writen by Jason Burrell for community usage
@@ -16,13 +16,13 @@ To prepare to use this script complete the following steps:
   a) Install-Module Rubrik
   b) Import-Module Rubrik
   c) Install VMWare PowerCLI
-2) Create a credentials file for the Rubrik Powershell Module with your administrative Rubrik username and password.
+2) Create a credentials file for connecting to Rubrik and vCenter (Typically a domain account).
   a) $cred = Get-Credential
-    i) Enter the Rubrik Administrator credentials to use for this script.
+    i) Enter the domain credentials to use for this script.
   b) $cred | Export-Clixml C:\temp\RubrikCred.xml -Force
 3) Create a target SLA for each attribute with the format HR-Tier
 .LINK
-https://github.com/rubrik-devops/powershell-scripts/Protect-RubrikvSphereAttribute.ps1
+https://github.com/jburrell
 https://github.com/rubrikinc/PowerShell-Module
 #>
 
@@ -38,7 +38,7 @@ param(
   [string]$rubrikNode,
   # The credentials file for Rubrik
   [Parameter(Mandatory=$True,
-  HelpMessage="Enter the Rubrik credentials file name.")]
+  HelpMessage="Enter the credentials file name.")]
   [string]$creds
 
 )
@@ -48,6 +48,7 @@ Import-Module Rubrik
 
 # Connect to Rubrik cluster
 Connect-Rubrik -Server $rubrikNode -Credential (Import-Clixml $creds)
+# Connect to vCenter
 Connect-VIServer -Server $vCenter -Credential (Import-Clixml $creds)
 
 # Assign VM to SLA
