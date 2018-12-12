@@ -55,22 +55,16 @@ Connect-VIServer -Server $vCenter -Credential (Import-Clixml $creds)
 $arrViewPropertiesToGet = "Name","Summary.Config.Annotation","CustomValue","AvailableField"
 foreach ($cluster in Get-Cluster) {
     $x = Get-View -ViewType VirtualMachine -Property $arrViewPropertiesToGet -SearchRoot $cluster.id | Select @{n="VMname"; e={$_.Name}},
-        @{n="HA"; e={$viewThisVM = $_; ($viewThisVM.CustomValue | ?{$_.Key -eq ($viewThisVM.AvailableField | ?{$_.Name -eq "HA"}).Key}).Value}},
-        @{n="Tier"; e={$viewThisVM = $_; ($viewThisVM.CustomValue | ?{$_.Key -eq ($viewThisVM.AvailableField | ?{$_.Name -eq "Tier"}).Key}).Value}},
-        @{n="Option"; e={$viewThisVM = $_; ($viewThisVM.CustomValue | ?{$_.Key -eq ($viewThisVM.AvailableField | ?{$_.Name -eq "Option"}).Key}).Value}}
+        @{n="Critical"; e={$viewThisVM = $_; ($viewThisVM.CustomValue | ?{$_.Key -eq ($viewThisVM.AvailableField | ?{$_.Name -eq "Critical"}).Key}).Value}},
+        @{n="BackupService"; e={$viewThisVM = $_; ($viewThisVM.CustomValue | ?{$_.Key -eq ($viewThisVM.AvailableField | ?{$_.Name -eq "BackupService"}).Key}).Value}}
 
     foreach ($vm in $x) {
-       if ($vm.HA) { #Check if there is a value for HA 
-        if ($vm.Tier) { #Check if there is a value for Tier
-            if (!$vm.Option) { #Check that nothing is in the Option field
-                $SLA = $vm.HA + "-" + $vm.Tier
-                if (Get-RubrikSLA -Name $SLA) {
-                    Get-RubrikVM $vm.VMname | Protect-RubrikVM -SLA $SLA -Confirm:$false
+       if ($vm.BackupService -eq "Rubrik") { #Check if backup service is Rubrik
+        if ($vm.Critical -eq "0") { #Check if Critical is 0
+                    Get-RubrikVM $vm.VMname | Protect-RubrikVM -SLA "Gold" -Confirm:$false
                 } else {
                     Write-Host "Cannot find SLA with name" $SLA
                 }
             }
         }
-       }
-    }
 }
