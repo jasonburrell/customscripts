@@ -106,12 +106,13 @@ function Get-PolarisReportCSV {
 
 
     $result = Invoke-WebRequest -Method Post -Headers $headers -Body $payload  -uri  $endpoint
+    
     if ($result) {
         $result = $result | ConvertFrom-Json 
     
         $link = $result.data.downloadReportLink.link
         $pos = $link.IndexOf("?")
-        $link = $link.Substring(0, $pos)
+        #$link = $link.Substring(0, $pos)
         return $link
     }
 
@@ -131,3 +132,5 @@ $token = Get-PolarisToken -Username $username -Password $password -PolarisURL $u
 $reportlink = Get-PolarisReportCSV -Token $token -PolarisURL $url -ReportID '179'
     
 Write-Output $reportlink
+
+Invoke-WebRequest -Uri $reportlink -OutFile 'report.csv'
